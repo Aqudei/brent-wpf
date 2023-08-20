@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BrentWpf.Models;
 using BrentWpf.Views;
+using MahApps.Metro.Controls.Dialogs;
 using Prism.DryIoc;
 using Prism.Ioc;
 using System;
@@ -25,7 +26,7 @@ namespace BrentWpf
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-          
+            containerRegistry.RegisterInstance(DialogCoordinator.Instance);
         }
     }
 }

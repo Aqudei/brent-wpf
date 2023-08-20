@@ -3,6 +3,8 @@ using ControlzEx.Standard;
 using CsvHelper;
 using CsvHelper.Configuration;
 using DevExpress.Mvvm.Native;
+using MahApps.Metro.Controls.Dialogs;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using Prism.Commands;
 using Prism.Mvvm;
 using System;
@@ -28,13 +30,16 @@ namespace BrentWpf.ViewModels
         private string _lastColumn = "Colour Avg";
         public string LastColumn { get => _lastColumn; set => SetProperty(ref _lastColumn, value); }
         private readonly Dispatcher _dispatcher;
+        private readonly IDialogCoordinator _dialogCoordinator;
+
         public ICollectionView Items { get => items; set => SetProperty(ref items, value); }
         private ObservableCollection<ItemModel> _items = new();
 
-        public MainViewModel()
+        public MainViewModel(IDialogCoordinator dialogCoordinator)
         {
             _dispatcher = Application.Current.Dispatcher;
             Items = CollectionViewSource.GetDefaultView(_items);
+            _dialogCoordinator = dialogCoordinator;
         }
 
         private DelegateCommand _loadCsvCommand;
@@ -54,31 +59,51 @@ namespace BrentWpf.ViewModels
             };
 
             var rslt = dlg.ShowDialog();
-            if (rslt == Microsoft.WindowsAPICodePack.Dialogs.CommonFileDialogResult.Ok)
+            if (rslt == CommonFileDialogResult.Ok)
             {
-                await _dispatcher.InvokeAsync(_items.Clear);
+                var progress = await _dialogCoordinator.ShowProgressAsync(this, "Please wait", "Processing Csv file");
 
-                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+                try
                 {
-                    IgnoreBlankLines = true,
-                };
-                var items = ReadCsv(dlg.FileName);
+                    progress.SetIndeterminate();
 
-                var csvData = string.Join(Environment.NewLine, items);
-                using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(csvData)))
-                using (var reader = new StreamReader(stream))
-                using (var csv = new CsvReader(reader, config))
+                    await ProcessCsvAsync(dlg.FileName);
+                }
+                catch (Exception e)
                 {
-                    csv.Context.RegisterClassMap<ItemModelMap>();
+                    MessageBox.Show($"{e.Message}\n\n{e.StackTrace}");
+                }
+                finally
+                {
+                    await progress.CloseAsync();
+                }
+            }
+        }
 
-                    var itemModels = csv.GetRecords<ItemModel>();
-                    foreach (var itemModel in itemModels)
+        private async Task ProcessCsvAsync(string fileName)
+        {
+            await _dispatcher.InvokeAsync(_items.Clear);
+
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                IgnoreBlankLines = true,
+            };
+            var items = ReadCsv(fileName);
+
+            var csvData = string.Join(Environment.NewLine, items);
+            using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(csvData)))
+            using (var reader = new StreamReader(stream))
+            using (var csv = new CsvReader(reader, config))
+            {
+                csv.Context.RegisterClassMap<ItemModelMap>();
+
+                var itemModels = csv.GetRecords<ItemModel>();
+                foreach (var itemModel in itemModels)
+                {
+                    await _dispatcher.InvokeAsync(new Action(() =>
                     {
-                        await _dispatcher.InvokeAsync(new Action(() =>
-                        {
-                            _items.Add(itemModel);
-                        }));
-                    }
+                        _items.Add(itemModel);
+                    }));
                 }
             }
         }
