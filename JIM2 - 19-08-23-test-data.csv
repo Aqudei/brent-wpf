@@ -1,0 +1,13 @@
+﻿,,,,,,,,,,,,,,,,,,,Jan 2023,,Feb 2023,,Mar 2023,,Apr 2023,,May 2023,,Jun 2023,,Jul 2023,,Aug 2023,
+ERP ID,Serial No,Model,Contract In,Contract Out,Date Last Billed,Next Bill Date,Billing Frequency,Rental Count,Machine Rental ($),Request By,Customer Name,Location,Mono CPP ($),Colour CPP ($),Current Read Mono,Current Read Colour,Mono Avg,Colour Avg,Mono,Colour,Mono,Colour,Mono,Colour,Mono,Colour,Mono,Colour,Mono,Colour,Mono,Colour,Mono,Colour
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12100-PMP,,MASTER,09/19/19,,7/07/2023,8/07/2023,1,,0,GenericCSV,Clovelly Hotel,,0.0501,0.1613,38741,108131,639.6,0,,,,,1374,0,565,0,733,0,526,0,,,,
+12101-PMP,,MASTER,12/10/2020,,8/05/2023,09/25/23,1,,0,GenericCSV,Finrent Pty Ltd,,0.011,0.0275,685422,19834,0,292.875,,,,,,,,,,,0,4686,,,,
+2145,AK4B052275,OKI.ES7470DN,6/07/2015,6/07/2020,12/07/2022,,5,,0,GenericCSV,Hecham Coffee & Nut Roaster Co. Pty Limited,Office Ground Floor,0.0154,0.11,529895,25212,0,0,,,0,0,,,0,0,,,0,0,,,,
+2165,060132--WJM,XCM505DA,,,07/16/23,8/07/2023,1,,100,GenericCSV,Taste Ireland,Upstairs Office,0.0167,0.1168,98213,49656,2014.4285,1237.8571,1719,1177,1995,1018,2095,1119,2159,1153,2290,1372,2612,1578,1231,1248,,
+2168,BK51200019A0,OKI.ES9455MFD,9/01/2015,9/01/2020,07/17/23,8/07/2023,1,,49,GenericCSV,Parsh Power Interiors NSW,Upstairs Office,0.0122,0.1223,170144,21889,3242.7142,673.5714,1457,423,3700,476,7631,1380,2332,1012,2725,361,2309,607,2545,456,,
+2169,al54019643a0,OKI.ES8473,,,,,5,,0,,K & K Partners,Office MFP,,,,,0,0,,,0,0,,,,,,,,,,,,
+2180,ak58035675d0,OKI.ES7411DN,11/03/2015,,,,5,,0,,Copy Express Pty Ltd,,,,,,0,0,,,0,0,,,,,,,,,,,,
+2198,AK61045347,OKI.ES7470DN,,,07/16/23,8/07/2023,1,,0,GenericCSV,A10X PHARMACY MOSMAN PTY LIMITED (RECEIVERS AND MANAGERS APPOINTED) - BRUNSKILL PHARMACY,,0.011,0.132,45997,255360,182.1666,747.3333,195,814,216,920,248,993,255,1023,,,0,0,179,734,,
+2199,AK61046491b0,OKI.ES5462,06/30/16,,,,5,,0,,Lifetime Vision,,,,,,0,0,,,0,0,,,,,,,,,,,,
+2204,K55200041,OKI.ES9455MFD,7/07/2016,,7/07/2023,8/07/2023,1,,0,GenericCSV,SA Teen Solicitors,SA Teen,0.0154,0.11,198621,20155,1857.4285,186.4285,1479,241,2034,19,3364,238,976,238,2329,247,2259,238,561,84,,
