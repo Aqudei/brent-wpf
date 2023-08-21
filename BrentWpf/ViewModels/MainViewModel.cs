@@ -3,6 +3,7 @@ using ControlzEx.Standard;
 using CsvHelper;
 using CsvHelper.Configuration;
 using DevExpress.Mvvm.Native;
+using DevExpress.Xpf.Core.Native;
 using MahApps.Metro.Controls.Dialogs;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Prism.Commands;
@@ -11,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -32,30 +34,28 @@ namespace BrentWpf.ViewModels
         private readonly Dispatcher _dispatcher;
         private readonly IDialogCoordinator _dialogCoordinator;
 
-        public ICollectionView Items { get => items; set => SetProperty(ref items, value); }
-        private ObservableCollection<ItemModel> _items = new();
-
         public MainViewModel(IDialogCoordinator dialogCoordinator)
         {
             _dispatcher = Application.Current.Dispatcher;
-            Items = CollectionViewSource.GetDefaultView(_items);
             _dialogCoordinator = dialogCoordinator;
         }
 
         private DelegateCommand _loadCsvCommand;
-        private ICollectionView items;
+        private DataView _items;
 
         public DelegateCommand LoadCsvCommand
         {
-            get { return _loadCsvCommand ??= new DelegateCommand(HandleLoadCsv); }
+            get { return _loadCsvCommand ??= new DelegateCommand(HandleLoadMasterCsv); }
         }
 
-        private async void HandleLoadCsv()
+        public DataView Items { get => _items; set => SetProperty(ref _items, value); }
+
+        private async void HandleLoadMasterCsv()
         {
-            var dlg = new Microsoft.WindowsAPICodePack.Dialogs.CommonOpenFileDialog
+            var dlg = new CommonOpenFileDialog
             {
                 Multiselect = false,
-                Filters = { new Microsoft.WindowsAPICodePack.Dialogs.CommonFileDialogFilter("Comma Separated Values", ".csv;*.CSV") }
+                Filters = { new CommonFileDialogFilter("Comma Separated Values", ".csv;*.CSV") }
             };
 
             var rslt = dlg.ShowDialog();
@@ -82,30 +82,123 @@ namespace BrentWpf.ViewModels
 
         private async Task ProcessCsvAsync(string fileName)
         {
-            await _dispatcher.InvokeAsync(_items.Clear);
+            var rows = ReadCsvGrid(fileName, "ERP ID", LastColumn);
+            var dataTable = ToDataTable(rows);
 
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            await _dispatcher.InvokeAsync(() =>
             {
-                IgnoreBlankLines = true,
-            };
-            var items = ReadCsv(fileName);
+                Items = dataTable.AsDataView();
+            });
 
-            var csvData = string.Join(Environment.NewLine, items);
-            using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(csvData)))
-            using (var reader = new StreamReader(stream))
-            using (var csv = new CsvReader(reader, config))
+
+
+            //var csvText = ToCsvText(rows);
+
+            //var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            //{
+
+            //};
+
+            //using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(csvText)))
+            //using (var reader = new StreamReader(stream))
+            //using (var csv = new CsvHelper.CsvReader(reader, config))
+            //{
+            //    csv.Context.RegisterClassMap<ItemModelMap>();
+
+            //    foreach (var item in csv.GetRecords<ItemModel>())
+            //    {
+            //        await _dispatcher.InvokeAsync(() =>
+            //        {
+            //            _items.Add(item);
+            //        });
+            //    }
+            //}
+        }
+
+        public static DataTable ToDataTable(IEnumerable<List<string>> rows)
+        {
+            // Create a DataTable
+            DataTable dt = new DataTable();
+
+            // Get the column names from the first row
+            List<string> columnNames = rows.First();
+
+            // Add columns to the DataTable
+            foreach (string columnName in columnNames)
             {
-                csv.Context.RegisterClassMap<ItemModelMap>();
+                dt.Columns.Add(columnName, typeof(string));
+            }
 
-                var itemModels = csv.GetRecords<ItemModel>();
-                foreach (var itemModel in itemModels)
+            // Iterate through the IEnumerable of Lists of strings and add each row to the DataTable
+            foreach (List<string> row in rows.Skip(1))
+            {
+                DataRow dr = dt.Rows.Add();
+                for (int i = 0; i < row.Count; i++)
                 {
-                    await _dispatcher.InvokeAsync(new Action(() =>
-                    {
-                        _items.Add(itemModel);
-                    }));
+                    dr[i] = row[i];
                 }
             }
+
+            return dt;
+        }
+
+        private IEnumerable<List<string>> ReadCsvGrid(string fileName, string startMarker, string endMarker)
+        {
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = false
+            };
+            var rowCount = 0;
+            var lastIndex = 0;
+
+            using (var reader = new StreamReader(fileName))
+            using (var csv = new CsvReader(reader, config))
+            {
+                var markerFound = false;
+
+                while (csv.Read())
+                {
+                    if (!markerFound)
+                    {
+                        markerFound = csv.GetField(0) == startMarker;
+                        if (!markerFound)
+                            continue;
+
+                    }
+
+                    var row = new List<string>();
+                    for (int i = 0; i < csv.Parser.Count; i++)
+                    {
+                        row.Add(csv.GetField<string>(i));
+                    }
+
+                    if (row.All(string.IsNullOrWhiteSpace))
+                    {
+                        continue;
+                    }
+
+                    if (rowCount == 0)
+                    {
+                        lastIndex = row.IndexOf(endMarker);
+                    }
+
+                    rowCount++;
+
+                    yield return row.GetRange(0, lastIndex + 1);
+                }
+            }
+        }
+
+        private string ToCsvText(IEnumerable<List<string>> rows)
+        {
+            var sb = new StringBuilder();
+
+            foreach (var row in rows)
+            {
+                sb.AppendLine(string.Join(",", row.Select(r => $"\"{r}\"")));
+            }
+
+            return sb.ToString();
         }
 
         private IEnumerable<string> ReadCsv(string fileName)

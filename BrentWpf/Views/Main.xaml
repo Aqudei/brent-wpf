@@ -18,24 +18,38 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <Button HorizontalAlignment="Left"
+        <StackPanel Orientation="Horizontal">
+            <Button
                 VerticalContentAlignment="Center"
-                VerticalAlignment="Center"
-                Margin="4"
-                Command="{Binding LoadCsvCommand}" Width="110">
-            <Button.Content>
+                Command="{Binding LoadCsvCommand}" Margin="2,2,2,2">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <ico:PackIconFontAwesome Kind="FileCsvSolid"
-                                              Margin="5"/>
+                        Width="10"
+                        Margin="5"/>
                     <Label Grid.Column="1"
-                           VerticalAlignment="Center">Load CSV</Label>
+                        VerticalAlignment="Center" Content="Import Master CSV"/>
                 </Grid>
-            </Button.Content>
-        </Button>
+            </Button>
+            <Button
+                VerticalContentAlignment="Center"
+                Command="{Binding LoadCsvCommand}" Margin="2,2,2,2">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <ico:PackIconFontAwesome Kind="FileCsvSolid"
+                        Width="10"
+                        Margin="5"/>
+                    <Label Grid.Column="1"
+                        VerticalAlignment="Center" Content="Import CSV"/>
+                </Grid>
+            </Button>
+        </StackPanel>
         <dxg:GridControl AutoGenerateColumns="AddNew" 
                          ItemsSource="{Binding Items}"
                          EnableSmartColumnsGeneration="True"
