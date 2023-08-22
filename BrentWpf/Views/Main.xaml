@@ -19,9 +19,10 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal">
-            <Button
-                VerticalContentAlignment="Center"
-                Command="{Binding LoadCsvCommand}" Margin="2,2,2,2">
+            <Button VerticalContentAlignment="Center"
+                    Command="{Binding LoadMasterCsvCommand}" 
+                    Margin="2,2,2,2">
+                
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
@@ -34,9 +35,8 @@
                         VerticalAlignment="Center" Content="Import Master CSV"/>
                 </Grid>
             </Button>
-            <Button
-                VerticalContentAlignment="Center"
-                Command="{Binding LoadCsvCommand}" Margin="2,2,2,2">
+            <Button VerticalContentAlignment="Center"
+                    Command="{Binding LoadDataCsvCommand}" Margin="2,2,2,2">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>

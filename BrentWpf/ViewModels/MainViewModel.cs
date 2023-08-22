@@ -29,8 +29,6 @@ namespace BrentWpf.ViewModels
 {
     internal class MainViewModel : BindableBase
     {
-        private string _lastColumn = "Colour Avg";
-        public string LastColumn { get => _lastColumn; set => SetProperty(ref _lastColumn, value); }
         private readonly Dispatcher _dispatcher;
         private readonly IDialogCoordinator _dialogCoordinator;
 
@@ -40,12 +38,20 @@ namespace BrentWpf.ViewModels
             _dialogCoordinator = dialogCoordinator;
         }
 
-        private DelegateCommand _loadCsvCommand;
+        private DelegateCommand _loadMasterCsvCommand;
         private DataView _items;
+        private DelegateCommand _loadDataCsvCommand;
 
-        public DelegateCommand LoadCsvCommand
+        public DelegateCommand LoadMasterCsvCommand
         {
-            get { return _loadCsvCommand ??= new DelegateCommand(HandleLoadMasterCsv); }
+            get { return _loadMasterCsvCommand ??= new DelegateCommand(HandleLoadMasterCsv); }
+        }
+
+        public DelegateCommand LoadDataCsvCommand { get => _loadDataCsvCommand ??= new DelegateCommand(HandleLoadCsvData); }
+
+        private void HandleLoadCsvData()
+        {
+
         }
 
         public DataView Items { get => _items; set => SetProperty(ref _items, value); }
@@ -82,171 +88,18 @@ namespace BrentWpf.ViewModels
 
         private async Task ProcessCsvAsync(string fileName)
         {
-            var rows = ReadCsvGrid(fileName, "ERP ID", LastColumn);
-            var dataTable = ToDataTable(rows);
+            var csvData = DataUtils.ReadCsvGrid(fileName,
+                Properties.Settings.Default.ROW_START_MARKER,
+                Properties.Settings.Default.COLUMN_START_MARKER,
+                Properties.Settings.Default.COLUMN_END_MARKER);
+
+
+            var dataTable = DataUtils.ToDataTable(csvData);
 
             await _dispatcher.InvokeAsync(() =>
             {
                 Items = dataTable.AsDataView();
             });
-
-
-
-            //var csvText = ToCsvText(rows);
-
-            //var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-            //{
-
-            //};
-
-            //using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(csvText)))
-            //using (var reader = new StreamReader(stream))
-            //using (var csv = new CsvHelper.CsvReader(reader, config))
-            //{
-            //    csv.Context.RegisterClassMap<ItemModelMap>();
-
-            //    foreach (var item in csv.GetRecords<ItemModel>())
-            //    {
-            //        await _dispatcher.InvokeAsync(() =>
-            //        {
-            //            _items.Add(item);
-            //        });
-            //    }
-            //}
-        }
-
-        public static DataTable ToDataTable(IEnumerable<List<string>> rows)
-        {
-            // Create a DataTable
-            DataTable dt = new DataTable();
-
-            // Get the column names from the first row
-            List<string> columnNames = rows.First();
-
-            // Add columns to the DataTable
-            foreach (string columnName in columnNames)
-            {
-                dt.Columns.Add(columnName, typeof(string));
-            }
-
-            // Iterate through the IEnumerable of Lists of strings and add each row to the DataTable
-            foreach (List<string> row in rows.Skip(1))
-            {
-                DataRow dr = dt.Rows.Add();
-                for (int i = 0; i < row.Count; i++)
-                {
-                    dr[i] = row[i];
-                }
-            }
-
-            return dt;
-        }
-
-        private IEnumerable<List<string>> ReadCsvGrid(string fileName, string startMarker, string endMarker)
-        {
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HasHeaderRecord = false
-            };
-            var rowCount = 0;
-            var lastIndex = 0;
-
-            using (var reader = new StreamReader(fileName))
-            using (var csv = new CsvReader(reader, config))
-            {
-                var markerFound = false;
-
-                while (csv.Read())
-                {
-                    if (!markerFound)
-                    {
-                        markerFound = csv.GetField(0) == startMarker;
-                        if (!markerFound)
-                            continue;
-
-                    }
-
-                    var row = new List<string>();
-                    for (int i = 0; i < csv.Parser.Count; i++)
-                    {
-                        row.Add(csv.GetField<string>(i));
-                    }
-
-                    if (row.All(string.IsNullOrWhiteSpace))
-                    {
-                        continue;
-                    }
-
-                    if (rowCount == 0)
-                    {
-                        lastIndex = row.IndexOf(endMarker);
-                    }
-
-                    rowCount++;
-
-                    yield return row.GetRange(0, lastIndex + 1);
-                }
-            }
-        }
-
-        private string ToCsvText(IEnumerable<List<string>> rows)
-        {
-            var sb = new StringBuilder();
-
-            foreach (var row in rows)
-            {
-                sb.AppendLine(string.Join(",", row.Select(r => $"\"{r}\"")));
-            }
-
-            return sb.ToString();
-        }
-
-        private IEnumerable<string> ReadCsv(string fileName)
-        {
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HasHeaderRecord = false
-            };
-
-            using (var reader = new StreamReader(fileName))
-            using (var csv = new CsvReader(reader, config))
-            {
-                var header = new List<string>();
-
-                while (csv.Read())
-                {
-                    var row = new List<string>();
-                    for (int i = 0; i < csv.Parser.Count; i++)
-                    {
-                        row.Add(csv.GetField<string>(i));
-                    }
-
-                    if (!header.Any())
-                    {
-                        if (!string.IsNullOrWhiteSpace(row.FirstOrDefault()))
-                        {
-                            var extra_idx = row.IndexOf(LastColumn);
-
-                            for (int i = 0; i < extra_idx; i++)
-                            {
-                                header.Add($"\"{row[i]}\"");
-                            }
-
-                            yield return string.Join(",", header);
-
-                        }
-                        continue;
-                    }
-
-                    var data = new List<string>();
-                    for (var i = 0; i < header.Count; i++)
-                    {
-                        data.Add($"\"{row[i]}\"");
-                    }
-
-                    yield return string.Join(",", data);
-                }
-            }
         }
     }
 }
